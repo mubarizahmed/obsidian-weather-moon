@@ -2,68 +2,49 @@ import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Set
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
-	mySetting: string;
+interface WeatherMoonSettings {
+	location: string;
+	unit: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+const DEFAULT_SETTINGS: WeatherMoonSettings = {
+	location: 'Kleve, Germany',
+	unit: 'm'
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class WeatherMoon extends Plugin {
+	settings: WeatherMoonSettings;
 
 	async onload() {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
+		// This adds a new command that inserts current weather data into the active editor
 		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
+			id: 'current-weather',
+			name: 'Current weather',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
+				// this.getWeatherDataOWM();
+				
+				this.getWeatherDataWttr().then((weatherData) => {
+					// This will insert the text at the current cursor position					
+					editor.replaceSelection(weatherData);
+				});
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
 			}
 		});
+
+		// This adds a new command that inserts Today's moon phase data into the active editor
+		this.addCommand({
+			id: 'moon-phase',
+			name: 'Moon phase',
+			editorCallback: (editor: Editor, view: MarkdownView) => {
+				this.getMoonPhase().then((moonPhase) => {
+					// This will insert the text at the current cursor position
+					editor.replaceSelection(moonPhase);
+				});
+			}
+		});
+
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
@@ -89,28 +70,38 @@ export default class MyPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
+	// function to fetch weather data from openweathermap.org
+	// async getWeatherDataOWM() {
+	// 	const response = await fetch("https://api.openweathermap.org/data/2.5/weather?q="+this.settings.location+"&appid="+process.env.OPENWEATHER_API);
+	// 	const data = await response.json();
+	// 	console.log(data);
+	// 	return data;
+	// }
+
+	// function to fetch weather data from wttr.in
+	async getWeatherDataWttr() {
+		const response = await fetch('https://wttr.in/'+this.settings.location+'?'+this.settings.unit+'&format=4&lang=en');
+		const data = await response.text();
+		console.log(data);
+		return data;
+	}
+
+	// function to fetch moon phase data from wttr.in
+	async getMoonPhase() {
+		const response = await fetch('https://wttr.in/'+this.settings.location+'?'+this.settings.unit+'&format=%m+D:%20%M\n&lang=en');
+		const data = await response.text();
+		console.log(data);
+		return data;
+	}
+
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: WeatherMoon;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: WeatherMoon) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -120,17 +111,30 @@ class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+		containerEl.createEl('h1', {text: 'Weather & Moon Phases Settings'});
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
+			.setName('Location')
+			.setDesc('Set a location to fetch weather. [City, Country]')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('Kleve, Germany')
+				.setValue(this.plugin.settings.location)
 				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
+					console.log('Location: ' + value);
+					this.plugin.settings.location = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Temperature Unit')
+			.setDesc('Set a temperature unit to display.')
+			.addDropdown(dropdown => dropdown
+				.addOption('m', 'Celsius')
+				.addOption('u', 'Fahrenheit')
+				.setValue(this.plugin.settings.unit)	
+				.onChange(async (value) => {
+					console.log('Temperature Unit: ' + value);
+					this.plugin.settings.unit = value;
 					await this.plugin.saveSettings();
 				}));
 	}

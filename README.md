@@ -2,7 +2,7 @@
 
 This is a plugin for [Obsidian](https://obsidian.md) that inserts the current weather and moon phase into your notes.
 
-![Screenshot](Screenshot.gif)
+![Screenshot](screenshots/1.gif)
 
 As of now, this plugin only supports the following weather providers:
 - [WTTR.in](https://wttr.in)
@@ -10,6 +10,10 @@ As of now, this plugin only supports the following weather providers:
 ## Features
 - Insert the current weather (single-line).
 - Insert the current Moon phase and day.
+- Insert the current weather as a HTML block
+- Customizable formatting
+
+![Screenshot](screenshots/2.jpg)
 
 
 ## Installation
@@ -22,8 +26,9 @@ As of now, this plugin only supports the following weather providers:
 ## Usage
 - Open the command palette (Ctrl/Cmd + P) and type `Weather & Moon` to see the available commands.
 - The commands are:
-    - `Current weather`: Inserts the current weather.
-    - `Moon phase`: Inserts the current Moon phase and day.
+    - `Current weather (Inline)`: Inserts the current weather as line of text.
+    - `Current weather (HTML)`: Inserts the current weather as a HTML block.
+    - `Moon phase (Inline)`: Inserts the current Moon phase and day.
 - The command palette can also be opened by typing '/' followed by the command.
 
 ## Settings

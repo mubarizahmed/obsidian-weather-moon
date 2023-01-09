@@ -1,11 +1,11 @@
 {
   "name": "obsidian-weather-moon",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "This plugin allows you to insert weather and moon phase information into your notes.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "build": "node esbuild.config.mjs production && cp manifest.json build && cp styles.css build",
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },
   "keywords": [],

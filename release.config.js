@@ -9,12 +9,12 @@ const config = {
       {
         "replacements": [
           {
-            "files": ["foo/manifest.json"],
-            "from": "\"version\" : \".*\"",
-            "to": "\"version\" : \"${nextRelease.version}\"",
+            "files": ["manifest.json"],
+            "from": "\"version\": \".*\"",
+            "to": "\"version\": \"${nextRelease.version}\"",
             "results": [
               {
-                "file": "foo/manifest.json",
+                "file": "manifest.json",
                 "hasChanged": true,
                 "numMatches": 1,
                 "numReplacements": 1
@@ -23,12 +23,12 @@ const config = {
             "countMatches": true
           },
           {
-            "files": ["foo/build/manifest.json"],
-            "from": "\"version\" : \".*\"",
-            "to": "\"version\" : \"${nextRelease.version}\"",
+            "files": ["build/manifest.json"],
+            "from": "\"version\": \".*\"",
+            "to": "\"version\": \"${nextRelease.version}\"",
             "results": [
               {
-                "file": "foo/build/manifest.json",
+                "file": "build/manifest.json",
                 "hasChanged": true,
                 "numMatches": 1,
                 "numReplacements": 1

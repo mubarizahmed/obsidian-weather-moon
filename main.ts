@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-
+import Formatter from './Formatter';
 // Remember to rename these classes and interfaces!
 
 interface WeatherMoonSettings {
@@ -12,8 +12,8 @@ interface WeatherMoonSettings {
 const DEFAULT_SETTINGS: WeatherMoonSettings = {
 	location: 'Kleve, Germany',
 	unit: 'm',
-	inlineFormatWeather: '%l:+%c+🌡️%t+🌬️%w\n',
-	inlineFormatMoon: '%m+D:%20%M\n'
+	inlineFormatWeather: '%l: %c 🌡️%t 🌬️%w\n',
+	inlineFormatMoon: '%m D:%M\n'
 }
 
 export default class WeatherMoon extends Plugin {
@@ -22,29 +22,34 @@ export default class WeatherMoon extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// This adds a new command that inserts current weather data into the active editor
-		this.addCommand({
-			id: 'current-weather',
-			name: 'Current weather (Inline)',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				// this.getWeatherDataOWM();
-				
-				this.getWeatherDataWttr().then((weatherData) => {
-					// This will insert the text at the current cursor position					
-					editor.replaceSelection(weatherData);
+				// This adds a new command that inserts current weather data into the active editor as a HTML element
+				this.addCommand({
+					id: 'current-weather-test',
+					name: 'Current weather (Inline)',
+					editorCallback: (editor: Editor, view: MarkdownView) => {
+		
+						this.getWeatherDataJSON().then((weatherData) => {
+		
+							const f = new Formatter();
+							
+							// This will insert the text at the current cursor position
+							editor.replaceSelection(f.dataToString(weatherData,this.settings.inlineFormatWeather,this.settings.unit,this.settings.location));
+						});
+		
+					}
 				});
-
-			}
-		});
 
 		// This adds a new command that inserts Today's moon phase data into the active editor
 		this.addCommand({
 			id: 'moon-phase',
 			name: 'Moon phase (Inline)',
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.getMoonPhase().then((moonPhase) => {
+				this.getWeatherDataJSON().then((weatherData) => {
+
+					const f = new Formatter();
+					
 					// This will insert the text at the current cursor position
-					editor.replaceSelection(moonPhase);
+					editor.replaceSelection(f.dataToString(weatherData,this.settings.inlineFormatMoon,this.settings.unit,this.settings.location));
 				});
 			}
 		});
@@ -63,6 +68,8 @@ export default class WeatherMoon extends Plugin {
 
 			}
 		});
+
+
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
@@ -122,6 +129,17 @@ export default class WeatherMoon extends Plugin {
 		const dataHTML = '<div style="display:flex; border-radius:0.5em; width=100%; border: 0.1em solid lavender; color:black;"> <div style="display:flex; flex:2; background-color:lavender; border-radius:0.5rem 0 0 0.5em; padding:0em; align-items:center; justify-content:space-evenly; text-align:center;"><div><p style="font-size:5em; margin:0; font-weight:300">'+dataSplit[0]+'</p></div><div style="text-align:justify"><p style="margin:0.1em; font-weight:bold">'+dataSplit[1]+'</p><p style="margin:0.1em;">'+dataSplit[2]+'</p><p style="margin:0.0em;">'+dataSplit[3]+'</p></div></div><div style="display:flex; flex:1; background-color:white;border-radius:0 0.5rem 0.5em 0; padding:0em; align-items:center; justify-content:space-evenly;"><p style="font-size:5em; margin:0;">'+dataSplit[4]+'</p></div></div>\n';
 		return dataHTML;
 	}
+
+	// function to fetch weather data from wttr.in and return it as JSON
+	async getWeatherDataJSON() {
+		const response = await fetch('https://wttr.in/'+this.settings.location+'?'+this.settings.unit+'&format=j1&lang=en');
+		const data = await response.text();
+		const weatherData = JSON.parse(data);
+		console.log(weatherData);
+		return weatherData;
+	}
+
+	// function to replace regex in format with 
 }
 
 
@@ -152,11 +170,11 @@ class SampleSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Temperature Unit')
-			.setDesc('Set a temperature unit to display.')
+			.setName('Units')
+			.setDesc('Set units for the Temperature, Wind Speed, and Pressure.')
 			.addDropdown(dropdown => dropdown
-				.addOption('m', 'Celsius')
-				.addOption('u', 'Fahrenheit')
+				.addOption('m', 'Metric')
+				.addOption('u', 'Imperial')
 				.setValue(this.plugin.settings.unit)	
 				.onChange(async (value) => {
 					this.plugin.settings.unit = value;
@@ -165,30 +183,31 @@ class SampleSettingTab extends PluginSettingTab {
 		
 		new Setting(containerEl)
 			.setName('Weather Inline Format')
-			.setDesc('Set a format for inline weather data. (See https://github.com/chubin/wttr.in#one-line-output for placeholders.)')
-			.addText(text => text
-				.setPlaceholder('%l:+%c+🌡️%t+🌬️%w\n')
+			.setDesc('Set a format for inline weather data. (See https://github.com/mubarizahmed/obsidian-weather-moon#settings for placeholders.)')
+			.addTextArea(text => text
+				.setPlaceholder('%l: %c 🌡️%t 🌬️%w\n')
 				.setValue(this.plugin.settings.inlineFormatWeather)
 				.onChange(async (value) => {
 					if (value == '') {
-						this.plugin.settings.inlineFormatWeather = '%l:+%c+🌡️%t+🌬️%w\n';
+						this.plugin.settings.inlineFormatWeather = '%l: %c 🌡️%t 🌬️%w\n';
 					}else{
 						this.plugin.settings.inlineFormatWeather = value;
 					}
 					await this.plugin.saveSettings();
 				}
 			))
+			
 
 
 		new Setting(containerEl)
 			.setName('Moon Phase Inline Format')
-			.setDesc('Set a format for inline moon phase data. (See https://github.com/chubin/wttr.in#one-line-output for placeholders.)')
-			.addText(text => text
-				.setPlaceholder('%m+D:%20%M\n')
+			.setDesc('Set a format for inline moon phase data. (See https://github.com/mubarizahmed/obsidian-weather-moon#settings for placeholders.)')
+			.addTextArea(text => text
+				.setPlaceholder('%m D:%M\n')
 				.setValue(this.plugin.settings.inlineFormatMoon)
 				.onChange(async (value) => {
 					if (value == '') {
-						this.plugin.settings.inlineFormatMoon = '%m+D:%20%M\n';
+						this.plugin.settings.inlineFormatMoon = '%m %M %n\n';
 					}else{
 						this.plugin.settings.inlineFormatMoon = value;
 					}

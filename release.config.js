@@ -39,10 +39,10 @@ const config = {
         ]
       }
     ],
-    ["@semantic-release/npm", {
-      "npmPublish": false,
-      "tarballDir": false,
-    }],
+    // ["@semantic-release/npm", {
+    //   "npmPublish": false,
+    //   "tarballDir": false,
+    // }],
     ["@semantic-release/git", {
       "assets": ["manifest.json"],
       "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"

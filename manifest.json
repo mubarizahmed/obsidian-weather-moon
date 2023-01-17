@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-weather-moon",
 	"name": "Weather & Moon Phases",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "This plugin allows you to insert weather and moon phase information into your notes.",
 	"author": "Mubariz Ahmed",

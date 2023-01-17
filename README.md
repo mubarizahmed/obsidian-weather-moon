@@ -34,6 +34,30 @@ As of now, this plugin only supports the following weather providers:
 ## Settings
 - Location: This should be a city name, or a city name followed by a comma and a Country. For example, "London" or "London, UK".
 - Units: This should be either "metric" or "imperial".
+- Format: This should be a string that will be used to format the weather data.
+
+The following is a list of placeholders that can be used in the format string:
+
+| Placeholder | Description |
+| ----------- | ----------- |
+| %c | weather condition icon |
+| %C | weather condition text |
+| %x | weather condition plain|
+| %h | humidity |
+| %t | temperature |
+| %f | feels like temperature |
+| %w | wind speed |
+| %p | precipitation |
+| %o | precipitation chance |
+| %P | pressure |
+| %u | UV index |
+| %l | requested location |
+| %L | weather station location |
+| %m | moon phase icon |
+| %M | moon age |
+| %n | moon phase name |
+| %S | sunrise time |
+| %s | sunset time |
 
 ## Feedback
 If you have any feedback, please feel free to open an issue on the [GitHub repo](https://github.com/mubarizahmed/obsidian-weather-moon/issues). 
